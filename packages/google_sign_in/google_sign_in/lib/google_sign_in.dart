@@ -425,12 +425,21 @@ class GoogleSignIn {
   /// a Future which resolves to the same user instance.
   ///
   /// Re-authentication can be triggered only after [signOut] or [disconnect].
-  Future<GoogleSignInAccount?> signIn() {
-    final Future<GoogleSignInAccount?> result =
-        _addMethodCall(GoogleSignInPlatform.instance.signIn, canSkipCall: true);
-    bool isCanceled(dynamic error) =>
-        error is PlatformException && error.code == kSignInCanceledError;
-    return result.catchError((dynamic _) => null, test: isCanceled);
+  Future<GoogleSignInAccount?> signIn() async {
+    try {
+      final GoogleSignInAccount? result = await _addMethodCall(
+          GoogleSignInPlatform.instance.signIn,
+          canSkipCall: true);
+      return result;
+    } catch (error) {
+      bool isCanceled(dynamic error) =>
+          error is PlatformException && error.code == kSignInCanceledError;
+      if (isCanceled(error)) {
+        return null;
+      } else {
+        rethrow;
+      }
+    }
   }
 
   /// Marks current user as being in the signed out state.
